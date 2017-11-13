@@ -30,10 +30,10 @@ public enum AnimatorSystemPosition {
 public class AnimatorItemSettings {
 	public bool state;
 
-	public RectTransform canvasRect;
-	public Vector3[] canvasRectCorners;
-	public RectTransform parentRect;
-	public Vector3[] parentRectCorners;
+	public RectTransform canvasRT;
+	public Vector3[] canvasRTBounds;
+	public RectTransform parentRT;
+	public Vector3[] parentRTBounds;
 	public RectTransform rectTransform;
 	public Vector3[] rectTransformBounds;
 	public bool loop;
@@ -54,28 +54,53 @@ public class AnimatorItemSettings {
 	}
 
 	public void SetUp (GameObject go) {
-		canvasRect = go.GetComponentInParent<Canvas> ().GetComponent<RectTransform> ();
-		canvasRectCorners = new Vector3[4];
-		canvasRect.GetLocalCorners (canvasRectCorners);
+		canvasRT = go.GetComponentInParent<Canvas> ().GetComponent<RectTransform> ();
+		CalculateCanvasBounds ();
 
-		parentRect = go.transform.parent.GetComponent<RectTransform>();
-		parentRectCorners = new Vector3[4];
-		parentRect.GetLocalCorners (parentRectCorners);
+		parentRT = go.transform.parent.GetComponent<RectTransform> ();
+		CalculateParentBounds ();
 
 		rectTransform = go.GetComponent<RectTransform> ();
 		CalculateRectTransformBounds ();
 	}
 
+	private void CalculateCanvasBounds () {
+		Rect canvasRect = canvasRT.rect;
+		canvasRTBounds = new Vector3[8];
+		canvasRTBounds[0] = new Vector2 (canvasRect.xMin, canvasRect.yMin);
+		canvasRTBounds[1] = new Vector2 (canvasRect.xMin, canvasRect.center.y);
+		canvasRTBounds[2] = new Vector2 (canvasRect.xMin, canvasRect.yMax);
+		canvasRTBounds[3] = new Vector2 (canvasRect.center.x, canvasRect.yMax);
+		canvasRTBounds[4] = new Vector2 (canvasRect.xMax, canvasRect.yMax);
+		canvasRTBounds[5] = new Vector2 (canvasRect.xMax, canvasRect.center.y);
+		canvasRTBounds[6] = new Vector2 (canvasRect.xMax, canvasRect.yMin);
+		canvasRTBounds[7] = new Vector2 (canvasRect.center.x, canvasRect.yMin);
+	}
+
+	private void CalculateParentBounds () {
+		Rect parentRect = parentRT.rect;
+		parentRTBounds = new Vector3[8];
+		parentRTBounds[0] = new Vector2 (parentRect.xMin, parentRect.yMin);
+		parentRTBounds[1] = new Vector2 (parentRect.xMin, parentRect.center.y);
+		parentRTBounds[2] = new Vector2 (parentRect.xMin, parentRect.yMax);
+		parentRTBounds[3] = new Vector2 (parentRect.center.x, parentRect.yMax);
+		parentRTBounds[4] = new Vector2 (parentRect.xMax, parentRect.yMax);
+		parentRTBounds[5] = new Vector2 (parentRect.xMax, parentRect.center.y);
+		parentRTBounds[6] = new Vector2 (parentRect.xMax, parentRect.yMin);
+		parentRTBounds[7] = new Vector2 (parentRect.center.x, parentRect.yMin);
+	}
+
 	private void CalculateRectTransformBounds () {
-		Rect rect = rectTransform.rect;
-		rectTransformBounds[0] = new Vector2 (rect.xMin, rect.yMin);
-		rectTransformBounds[1] = new Vector2 (rect.xMin, rect.y);
-		rectTransformBounds[2] = new Vector2 (rect.xMin, rect.yMax);
-		rectTransformBounds[3] = new Vector2 (rect.x, rect.yMax);
-		rectTransformBounds[4] = new Vector2 (rect.xMax, rect.yMax);
-		rectTransformBounds[5] = new Vector2 (rect.xMax, rect.y);
-		rectTransformBounds[6] = new Vector2 (rect.xMax, rect.yMin);
-		rectTransformBounds[7] = new Vector2 (rect.x, rect.yMin);
+		Rect rectTransformRect = rectTransform.rect;
+		rectTransformBounds = new Vector3[8];
+		rectTransformBounds[0] = new Vector2 (rectTransformRect.xMin, rectTransformRect.yMin);
+		rectTransformBounds[1] = new Vector2 (rectTransformRect.xMin, rectTransformRect.center.y);
+		rectTransformBounds[2] = new Vector2 (rectTransformRect.xMin, rectTransformRect.yMax);
+		rectTransformBounds[3] = new Vector2 (rectTransformRect.center.x, rectTransformRect.yMax);
+		rectTransformBounds[4] = new Vector2 (rectTransformRect.xMax, rectTransformRect.yMax);
+		rectTransformBounds[5] = new Vector2 (rectTransformRect.xMax, rectTransformRect.center.y);
+		rectTransformBounds[6] = new Vector2 (rectTransformRect.xMax, rectTransformRect.yMin);
+		rectTransformBounds[7] = new Vector2 (rectTransformRect.center.x, rectTransformRect.yMin);
 	}
 
 	public void GetRectCenter () {
@@ -105,44 +130,47 @@ public class Movement : AnimatorItemSettings {
 
 	public Vector2 GetPosition (AnimatorSystemPosition position) {
 		switch (position) {
+			// Parent position
 			case AnimatorSystemPosition.Custom:
 				return startPosition;
 			case AnimatorSystemPosition.UpperLeft:
-			//rect.rect.
+				return parentRTBounds[2] - rectTransformBounds[6];
 			case AnimatorSystemPosition.UpperCenter:
-				break;
+				return parentRTBounds[3] - rectTransformBounds[7];
 			case AnimatorSystemPosition.UpperRight:
-				break;
+				return parentRTBounds[4] - rectTransformBounds[0];
 			case AnimatorSystemPosition.MiddleLeft:
-				break;
+				return parentRTBounds[1] - rectTransformBounds[5];
 			case AnimatorSystemPosition.MiddleCenter:
-				break;
+				return parentRT.localPosition;
 			case AnimatorSystemPosition.MiddleRight:
-				break;
+				return parentRTBounds[5] - rectTransformBounds[1];
 			case AnimatorSystemPosition.BottomLeft:
-				break;
+				return parentRTBounds[0] - rectTransformBounds[4];
 			case AnimatorSystemPosition.BottomCenter:
-				break;
+				return parentRTBounds[7] - rectTransformBounds[3];
 			case AnimatorSystemPosition.BottomRight:
-				break;
+				return parentRTBounds[6] - rectTransformBounds[2];
+
+			// Canvas position
 			case AnimatorSystemPosition.UpperLeftScreen:
-				break;
+				return canvasRTBounds[2] - rectTransformBounds[6] + canvasRT.position;
 			case AnimatorSystemPosition.UpperCenterScreen:
-				break;
+				return canvasRTBounds[3] - rectTransformBounds[7] + canvasRT.position;
 			case AnimatorSystemPosition.UpperRightScreen:
-				break;
+				return canvasRTBounds[4] - rectTransformBounds[0] + canvasRT.position;
 			case AnimatorSystemPosition.MiddleLeftScreen:
-				break;
+				return canvasRTBounds[1] - rectTransformBounds[5] + canvasRT.position;
 			case AnimatorSystemPosition.MiddleCenterScreen:
-				break;
+				return new Vector3 (canvasRTBounds[3].x, canvasRTBounds[1].y) + canvasRT.position;
 			case AnimatorSystemPosition.MiddleRightScreen:
-				break;
+				return canvasRTBounds[5] - rectTransformBounds[1] + canvasRT.position;
 			case AnimatorSystemPosition.BottomLeftScreen:
-				break;
+				return canvasRTBounds[0] - rectTransformBounds[4] + canvasRT.position;
 			case AnimatorSystemPosition.BottomCenterScreen:
-				break;
+				return canvasRTBounds[7] - rectTransformBounds[3] + canvasRT.position;
 			case AnimatorSystemPosition.BottomRightScreen:
-				break;
+				return canvasRTBounds[6] - rectTransformBounds[2] + canvasRT.position;
 		}
 		return Vector2.zero;
 	}
@@ -170,6 +198,9 @@ public class AnimatorItem : MonoBehaviour {
 	//}
 
 	#region Class members
+	public float size1;
+	public float size2;
+	public float size3;
 	#endregion
 
 	#region Class accesors
@@ -177,8 +208,32 @@ public class AnimatorItem : MonoBehaviour {
 
 	#region MonoBehaviour overrides
 	private void OnDrawGizmos () {
+		movement.SetUp (gameObject);
 		RectTransform trans = GetComponent<RectTransform> ();
-		trans.position = movement.GetPosition (AnimatorSystemPosition.UpperLeft);
+		trans.position = movement.GetPosition (movement.moveFrom);
+
+		Vector3[] cords = new Vector3[4];
+		movement.canvasRT.GetWorldCorners (cords);
+
+		for (int i = 0; i < 4; i++) {
+			Gizmos.color = Color.cyan;
+			Gizmos.DrawWireCube (cords[i], size1 * Vector3.one);
+		}
+
+		for (int i = 0; i < 8; i++) {
+			Gizmos.color = Color.yellow;
+			Gizmos.DrawWireSphere (movement.canvasRTBounds[i], size1);
+		}
+
+		for (int i = 0; i < 8; i++) {
+			Gizmos.color = Color.red;
+			Gizmos.DrawWireSphere (movement.parentRTBounds[i], size2);
+		}
+
+		for (int i = 0; i < 8; i++) {
+			Gizmos.color = Color.blue;
+			Gizmos.DrawWireSphere (movement.rectTransformBounds[i], size3);
+		}
 	}
 	#endregion
 
