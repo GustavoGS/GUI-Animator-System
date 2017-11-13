@@ -14,16 +14,11 @@ public enum AnimatorSystemPosition {
 	MiddleRight,
 	BottomLeft,
 	BottomCenter,
-	BottomRight,
-	UpperLeftScreen,
-	UpperCenterScreen,
-	UpperRightScreen,
-	MiddleLeftScreen,
-	MiddleCenterScreen,
-	MiddleRightScreen,
-	BottomLeftScreen,
-	BottomCenterScreen,
-	BottomRightScreen,
+	BottomRight
+}
+
+public enum AnimatorSysyemPositionMode {
+	Canvas, Parent
 }
 
 [System.Serializable]
@@ -118,6 +113,7 @@ public class AnimatorItemSettings {
 
 [System.Serializable]
 public class Movement : AnimatorItemSettings {
+	public AnimatorSysyemPositionMode moveMode;
 	public AnimatorSystemPosition moveFrom;
 	public Vector2 startPosition;
 	public Vector2 endPosition;
@@ -128,9 +124,8 @@ public class Movement : AnimatorItemSettings {
 		//});
 	}
 
-	public Vector2 GetPosition (AnimatorSystemPosition position) {
+	public Vector2 GetParentEdgePosition (AnimatorSystemPosition position) {
 		switch (position) {
-			// Parent position
 			case AnimatorSystemPosition.Custom:
 				return startPosition;
 			case AnimatorSystemPosition.UpperLeft:
@@ -151,28 +146,44 @@ public class Movement : AnimatorItemSettings {
 				return parentRTBounds[7] - rectTransformBounds[3];
 			case AnimatorSystemPosition.BottomRight:
 				return parentRTBounds[6] - rectTransformBounds[2];
-
-			// Canvas position
-			case AnimatorSystemPosition.UpperLeftScreen:
-				return canvasRTBounds[2] - rectTransformBounds[6] + canvasRT.position;
-			case AnimatorSystemPosition.UpperCenterScreen:
-				return canvasRTBounds[3] - rectTransformBounds[7] + canvasRT.position;
-			case AnimatorSystemPosition.UpperRightScreen:
-				return canvasRTBounds[4] - rectTransformBounds[0] + canvasRT.position;
-			case AnimatorSystemPosition.MiddleLeftScreen:
-				return canvasRTBounds[1] - rectTransformBounds[5] + canvasRT.position;
-			case AnimatorSystemPosition.MiddleCenterScreen:
-				return new Vector3 (canvasRTBounds[3].x, canvasRTBounds[1].y) + canvasRT.position;
-			case AnimatorSystemPosition.MiddleRightScreen:
-				return canvasRTBounds[5] - rectTransformBounds[1] + canvasRT.position;
-			case AnimatorSystemPosition.BottomLeftScreen:
-				return canvasRTBounds[0] - rectTransformBounds[4] + canvasRT.position;
-			case AnimatorSystemPosition.BottomCenterScreen:
-				return canvasRTBounds[7] - rectTransformBounds[3] + canvasRT.position;
-			case AnimatorSystemPosition.BottomRightScreen:
-				return canvasRTBounds[6] - rectTransformBounds[2] + canvasRT.position;
 		}
+
 		return Vector2.zero;
+	}
+
+	public Vector2 GetCanvasEdgePosition (AnimatorSystemPosition position) {
+		Vector3 edgePosition = Vector3.zero;
+		switch (position) {
+			case AnimatorSystemPosition.UpperLeft:
+				edgePosition = canvasRTBounds[2] - rectTransformBounds[6];
+				break;
+			case AnimatorSystemPosition.UpperCenter:
+				edgePosition = canvasRTBounds[3] - rectTransformBounds[7];
+				break;
+			case AnimatorSystemPosition.UpperRight:
+				edgePosition = canvasRTBounds[4] - rectTransformBounds[0];
+				break;
+			case AnimatorSystemPosition.MiddleLeft:
+				edgePosition = canvasRTBounds[1] - rectTransformBounds[5];
+				break;
+			case AnimatorSystemPosition.MiddleCenter:
+				edgePosition = new Vector3 (canvasRTBounds[3].x, canvasRTBounds[1].y);
+				break;
+			case AnimatorSystemPosition.MiddleRight:
+				edgePosition = canvasRTBounds[5] - rectTransformBounds[1];
+				break;
+			case AnimatorSystemPosition.BottomLeft:
+				edgePosition = canvasRTBounds[0] - rectTransformBounds[4];
+				break;
+			case AnimatorSystemPosition.BottomCenter:
+				edgePosition = canvasRTBounds[7] - rectTransformBounds[3];
+				break;
+			case AnimatorSystemPosition.BottomRight:
+				edgePosition = canvasRTBounds[6] - rectTransformBounds[2];
+				break;
+		}
+
+		return edgePosition + canvasRT.position;
 	}
 }
 
@@ -210,7 +221,7 @@ public class AnimatorItem : MonoBehaviour {
 	private void OnDrawGizmos () {
 		movement.SetUp (gameObject);
 		RectTransform trans = GetComponent<RectTransform> ();
-		trans.position = movement.GetPosition (movement.moveFrom);
+		trans.position = movement.GetParentEdgePosition (movement.moveFrom);
 
 		Vector3[] cords = new Vector3[4];
 		movement.canvasRT.GetWorldCorners (cords);
