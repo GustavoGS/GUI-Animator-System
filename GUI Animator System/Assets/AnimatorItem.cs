@@ -25,6 +25,7 @@ public enum AnimatorSysyemPositionMode {
 public class AnimatorItemSettings {
 	public bool state;
 
+	public GameObject go;
 	public RectTransform canvasRT;
 	public Vector3[] canvasRTBounds;
 	public RectTransform parentRT;
@@ -44,11 +45,18 @@ public class AnimatorItemSettings {
 	public delegate void CompleteDelegate ();
 	public event CompleteDelegate OnComplete;
 
-	public AnimatorItemSettings () {
+	protected void CallStart () {
+		if (OnStart != null)
+			OnStart ();
+	}
 
+	protected void CallComplete () {
+		if (OnComplete != null)
+			OnComplete ();
 	}
 
 	public void SetUp (GameObject go) {
+		this.go = go;
 		canvasRT = go.GetComponentInParent<Canvas> ().GetComponent<RectTransform> ();
 		CalculateCanvasBounds ();
 
@@ -61,6 +69,8 @@ public class AnimatorItemSettings {
 
 	private void CalculateCanvasBounds () {
 		Rect canvasRect = canvasRT.rect;
+		canvasRect.size *= canvasRT.localScale.x;
+		canvasRect.center = Vector3.zero;
 		canvasRTBounds = new Vector3[8];
 		canvasRTBounds[0] = new Vector2 (canvasRect.xMin, canvasRect.yMin);
 		canvasRTBounds[1] = new Vector2 (canvasRect.xMin, canvasRect.center.y);
@@ -87,6 +97,11 @@ public class AnimatorItemSettings {
 
 	private void CalculateRectTransformBounds () {
 		Rect rectTransformRect = rectTransform.rect;
+		Vector2 rectSize = rectTransformRect.size;
+		rectSize.x *= go.transform.lossyScale.x;
+		rectSize.y *= go.transform.lossyScale.y;
+		rectTransformRect.size = rectSize;
+		rectTransformRect.center = Vector3.zero;
 		rectTransformBounds = new Vector3[8];
 		rectTransformBounds[0] = new Vector2 (rectTransformRect.xMin, rectTransformRect.yMin);
 		rectTransformBounds[1] = new Vector2 (rectTransformRect.xMin, rectTransformRect.center.y);
@@ -105,10 +120,6 @@ public class AnimatorItemSettings {
 	public void SetRectPosition () {
 
 	}
-
-	//public float In () {
-	//	time.
-	//}
 }
 
 [System.Serializable]
@@ -118,16 +129,30 @@ public class Movement : AnimatorItemSettings {
 	public Vector2 startPosition;
 	public Vector2 endPosition;
 
-	public void In () {
-		//TweenController.Tween (gameObject, "MovementIn", true, 0, 1, time, (tween) => {
-		//	//transform.po
+	public void StartIn () {
+		CallStart ();
+
+		if (moveMode == AnimatorSysyemPositionMode.Canvas)
+			rectTransform.position = GetCanvasEdgePosition (moveFrom);
+		else
+			rectTransform.localPosition = GetParentEdgePosition (moveFrom);
+
+		//string tweenKey = "AnimatorSystemMovementItem";
+		//TweenController.Tween (go, tweenKey, true, 0, 1, time, (tween) => {
+		//	rectTransform.position = Vector3.Lerp (startPosition, )
+		//}, (tween)=> {
+		//	CallComplete ();
 		//});
+	}
+
+	public void StartOut () {
+
 	}
 
 	public Vector2 GetParentEdgePosition (AnimatorSystemPosition position) {
 		switch (position) {
 			case AnimatorSystemPosition.Custom:
-				return startPosition;
+				return -(Vector3) rectTransform.rect.center - (Vector3) startPosition;
 			case AnimatorSystemPosition.UpperLeft:
 				return parentRTBounds[2] - rectTransformBounds[6];
 			case AnimatorSystemPosition.UpperCenter:
@@ -137,7 +162,7 @@ public class Movement : AnimatorItemSettings {
 			case AnimatorSystemPosition.MiddleLeft:
 				return parentRTBounds[1] - rectTransformBounds[5];
 			case AnimatorSystemPosition.MiddleCenter:
-				return parentRT.localPosition;
+				return -(Vector3) rectTransform.rect.center;
 			case AnimatorSystemPosition.MiddleRight:
 				return parentRTBounds[5] - rectTransformBounds[1];
 			case AnimatorSystemPosition.BottomLeft:
@@ -154,6 +179,9 @@ public class Movement : AnimatorItemSettings {
 	public Vector2 GetCanvasEdgePosition (AnimatorSystemPosition position) {
 		Vector3 edgePosition = Vector3.zero;
 		switch (position) {
+			case AnimatorSystemPosition.Custom:
+				edgePosition = -(Vector3) rectTransform.rect.center + (Vector3) startPosition;
+				break;
 			case AnimatorSystemPosition.UpperLeft:
 				edgePosition = canvasRTBounds[2] - rectTransformBounds[6];
 				break;
@@ -167,7 +195,7 @@ public class Movement : AnimatorItemSettings {
 				edgePosition = canvasRTBounds[1] - rectTransformBounds[5];
 				break;
 			case AnimatorSystemPosition.MiddleCenter:
-				edgePosition = new Vector3 (canvasRTBounds[3].x, canvasRTBounds[1].y);
+				edgePosition = -(Vector3) rectTransform.rect.center;
 				break;
 			case AnimatorSystemPosition.MiddleRight:
 				edgePosition = canvasRTBounds[5] - rectTransformBounds[1];
@@ -191,7 +219,7 @@ public class AnimatorItem : MonoBehaviour {
 
 	public Movement movement;
 
-	public RectTransform transform;
+	//public RectTransform transform;
 
 	//public class Rotation : AnimatorItemSettings {
 	//	public Vector3 startEuler;
@@ -218,18 +246,21 @@ public class AnimatorItem : MonoBehaviour {
 	#endregion
 
 	#region MonoBehaviour overrides
+	private void Start () {
+		movement.StartIn ();
+	}
+
+	private void Update () {
+		if (Input.GetKeyDown (KeyCode.Space)) {
+			movement.SetUp (gameObject);
+			movement.StartIn ();
+		}
+	}
+
 	private void OnDrawGizmos () {
 		movement.SetUp (gameObject);
-		RectTransform trans = GetComponent<RectTransform> ();
-		trans.position = movement.GetParentEdgePosition (movement.moveFrom);
+		movement.StartIn ();
 
-		Vector3[] cords = new Vector3[4];
-		movement.canvasRT.GetWorldCorners (cords);
-
-		for (int i = 0; i < 4; i++) {
-			Gizmos.color = Color.cyan;
-			Gizmos.DrawWireCube (cords[i], size1 * Vector3.one);
-		}
 
 		for (int i = 0; i < 8; i++) {
 			Gizmos.color = Color.yellow;

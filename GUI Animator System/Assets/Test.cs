@@ -53,63 +53,63 @@ public class Test : MonoBehaviour {
 	}
 
 	private void OnDrawGizmos () {
-		parentRect = transform.parent.GetComponent<RectTransform> ();
-		rectTrans = GetComponent<RectTransform> ();
-		//canvas.GetLocalCorners (localCorners);
-		//canvas.GetWorldCorners (worldCorners);
+		//parentRect = transform.parent.GetComponent<RectTransform> ();
+		//rectTrans = GetComponent<RectTransform> ();
+		////canvas.GetLocalCorners (localCorners);
+		////canvas.GetWorldCorners (worldCorners);
 
-		for (int i = 0; i < 4; i++) {
-			Gizmos.color = Color.red;
-			Gizmos.DrawWireSphere (worldCorners[i], radius);
-			Gizmos.color = Color.blue;
-			Gizmos.DrawWireSphere (localCorners[i], radius);
-		}
+		//for (int i = 0; i < 4; i++) {
+		//	Gizmos.color = Color.red;
+		//	Gizmos.DrawWireSphere (worldCorners[i], radius);
+		//	Gizmos.color = Color.blue;
+		//	Gizmos.DrawWireSphere (localCorners[i], radius);
+		//}
 
-		parentRect.GetLocalCorners (parentCorners);
-		CalculateRectCorners ();
-		switch (pos) {
-			case AnimatorSystemPosition.Custom:
-				break;
-			case AnimatorSystemPosition.UpperLeft:
-				rectTrans.localPosition = parentCorners[1] - (Vector3) rectBounds[6];
-				break;
-			case AnimatorSystemPosition.UpperCenter:
-				break;
-			case AnimatorSystemPosition.UpperRight:
-				break;
-			case AnimatorSystemPosition.MiddleLeft:
-				break;
-			case AnimatorSystemPosition.MiddleCenter:
-				break;
-			case AnimatorSystemPosition.MiddleRight:
-				break;
-			case AnimatorSystemPosition.BottomLeft:
-				break;
-			case AnimatorSystemPosition.BottomCenter:
-				break;
-			case AnimatorSystemPosition.BottomRight:
-				break;
-			case AnimatorSystemPosition.UpperLeftScreen:
-				break;
-			case AnimatorSystemPosition.UpperCenterScreen:
-				break;
-			case AnimatorSystemPosition.UpperRightScreen:
-				break;
-			case AnimatorSystemPosition.MiddleLeftScreen:
-				break;
-			case AnimatorSystemPosition.MiddleCenterScreen:
-				break;
-			case AnimatorSystemPosition.MiddleRightScreen:
-				break;
-			case AnimatorSystemPosition.BottomLeftScreen:
-				break;
-			case AnimatorSystemPosition.BottomCenterScreen:
-				break;
-			case AnimatorSystemPosition.BottomRightScreen:
-				break;
-			default:
-				break;
-		}
+		//parentRect.GetLocalCorners (parentCorners);
+		//CalculateRectCorners ();
+		//switch (pos) {
+		//	case AnimatorSystemPosition.Custom:
+		//		break;
+		//	case AnimatorSystemPosition.UpperLeft:
+		//		rectTrans.localPosition = parentCorners[1] - (Vector3) rectBounds[6];
+		//		break;
+		//	case AnimatorSystemPosition.UpperCenter:
+		//		break;
+		//	case AnimatorSystemPosition.UpperRight:
+		//		break;
+		//	case AnimatorSystemPosition.MiddleLeft:
+		//		break;
+		//	case AnimatorSystemPosition.MiddleCenter:
+		//		break;
+		//	case AnimatorSystemPosition.MiddleRight:
+		//		break;
+		//	case AnimatorSystemPosition.BottomLeft:
+		//		break;
+		//	case AnimatorSystemPosition.BottomCenter:
+		//		break;
+		//	case AnimatorSystemPosition.BottomRight:
+		//		break;
+		//	case AnimatorSystemPosition.UpperLeftScreen:
+		//		break;
+		//	case AnimatorSystemPosition.UpperCenterScreen:
+		//		break;
+		//	case AnimatorSystemPosition.UpperRightScreen:
+		//		break;
+		//	case AnimatorSystemPosition.MiddleLeftScreen:
+		//		break;
+		//	case AnimatorSystemPosition.MiddleCenterScreen:
+		//		break;
+		//	case AnimatorSystemPosition.MiddleRightScreen:
+		//		break;
+		//	case AnimatorSystemPosition.BottomLeftScreen:
+		//		break;
+		//	case AnimatorSystemPosition.BottomCenterScreen:
+		//		break;
+		//	case AnimatorSystemPosition.BottomRightScreen:
+		//		break;
+		//	default:
+		//		break;
+		//}
 	}
 	#endregion
 

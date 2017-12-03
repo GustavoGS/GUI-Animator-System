@@ -34,7 +34,7 @@ namespace MyNamespace {
 					continue;
 				}
 
-				if (tween.Update (tween.useUnscaledTime ? Time.unscaledDeltaTime : Time.deltaTime))
+				if (tween.Update (tween.ignoreTimeScale ? Time.unscaledDeltaTime : Time.deltaTime))
 					tweens.RemoveAt (i);
 			}
 		}
@@ -44,24 +44,24 @@ namespace MyNamespace {
 		#endregion
 
 		#region Class implementation
-		public static Tween Tween (GameObject reference, string identifier, bool useUnscaledTime, float start, float end, float duration, Action<Tween> progress) {
-			return StartTween (reference, identifier, useUnscaledTime, start, end, duration, EasingCurves.linear, progress, null);
+		public static Tween Tween (GameObject reference, string identifier, bool ignoreTimeScale, float start, float end, float duration, Action<Tween> progress) {
+			return StartTween (reference, identifier, ignoreTimeScale, start, end, duration, EasingCurves.linear, progress, null);
 		}
 
-		public static Tween Tween (GameObject reference, string identifier, bool useUnscaledTime, float start, float end, float duration, Func<float, float> easing, Action<Tween> progress) {
-			return StartTween (reference, identifier, useUnscaledTime, start, end, duration, easing, progress, null);
+		public static Tween Tween (GameObject reference, string identifier, bool ignoreTimeScale, float start, float end, float duration, Func<float, float> easing, Action<Tween> progress) {
+			return StartTween (reference, identifier, ignoreTimeScale, start, end, duration, easing, progress, null);
 		}
 
-		public static Tween Tween (GameObject reference, string identifier, bool useUnscaledTime, float start, float end, float duration, Action<Tween> progress, Action<Tween> finish) {
-			return StartTween (reference, identifier, useUnscaledTime, start, end, duration, EasingCurves.linear, progress, finish);
+		public static Tween Tween (GameObject reference, string identifier, bool ignoreTimeScale, float start, float end, float duration, Action<Tween> progress, Action<Tween> finish) {
+			return StartTween (reference, identifier, ignoreTimeScale, start, end, duration, EasingCurves.linear, progress, finish);
 		}
 
-		public static Tween Tween (GameObject reference, string identifier, bool useUnscaledTime, float start, float end, float duration, Func<float, float> easing, Action<Tween> progress, Action<Tween> finish) {
-			return StartTween (reference, identifier, useUnscaledTime, start, end, duration, EasingCurves.linear, progress, finish);
+		public static Tween Tween (GameObject reference, string identifier, bool ignoreTimeScale, float start, float end, float duration, Func<float, float> easing, Action<Tween> progress, Action<Tween> finish) {
+			return StartTween (reference, identifier, ignoreTimeScale, start, end, duration, EasingCurves.linear, progress, finish);
 		}
 
-		protected static Tween StartTween (GameObject reference, string identifier, bool useUnscaledTime, float start, float end, float duration, Func<float, float> easing, Action<Tween> progress, Action<Tween> finish) {
-			Tween tween = new Tween (reference, reference.GetInstanceID () + identifier, useUnscaledTime, start, end, duration, easing, progress, finish);
+		protected static Tween StartTween (GameObject reference, string identifier, bool ignoreTimeScale, float start, float end, float duration, Func<float, float> easing, Action<Tween> progress, Action<Tween> finish) {
+			Tween tween = new Tween (reference, reference.GetInstanceID () + identifier, ignoreTimeScale, start, end, duration, easing, progress, finish);
 			AddTween (tween);
 			return tween;
 		}
@@ -114,17 +114,17 @@ namespace MyNamespace {
 		#region Class accesors
 		public GameObject reference { get; private set; }
 		public string identifier { get; private set; }
-		public bool useUnscaledTime { get; private set; }
+		public bool ignoreTimeScale { get; private set; }
 		public float duration { get; set; }
 		public float value { get; private set; }
 		public float progress { get; private set; }
 		#endregion
 
 		#region Class implementation
-		public Tween (GameObject reference, string identifier, bool useUnscaledTime, float start, float end, float duration, Func<float, float> easing, Action<Tween> progress, Action<Tween> finish) {
+		public Tween (GameObject reference, string identifier, bool ignoreTimeScale, float start, float end, float duration, Func<float, float> easing, Action<Tween> progress, Action<Tween> finish) {
 			this.reference = reference;
 			this.identifier = identifier;
-			this.useUnscaledTime = useUnscaledTime;
+			this.ignoreTimeScale = ignoreTimeScale;
 			this.startValue = start;
 			this.endValue = end;
 			this.duration = duration;
