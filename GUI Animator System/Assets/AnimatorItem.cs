@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using MyNamespace;
+using System;
 
 public enum AnimatorSystemPosition {
 	Custom,
@@ -17,8 +18,117 @@ public enum AnimatorSystemPosition {
 	BottomRight
 }
 
-public enum AnimatorSysyemPositionMode {
+public enum AnimatorSystemPositionMode {
 	Canvas, Parent
+}
+
+public struct AnimatorSystemRect {
+	public enum Space { Local, Global }
+
+	public RectTransform rectTransform;
+
+	private Rect LocalRect;
+	public Rect localRect {
+		get {
+			CalculateRect (Space.Local);
+			return LocalRect;
+		}
+		set { }
+	}
+	public Vector2 localCenter {
+		get { return localRect.center; }
+	}
+
+	private Vector2[] LocalCorners;
+	public Vector2[] localCorners {
+		get {
+			CalculateAllCorners (Space.Local);
+			return LocalCorners;
+		}
+	}
+
+	private Rect GlobalRect;
+	public Rect globalRect {
+		get {
+			CalculateGlobalRect ();
+			return GlobalRect;
+		}
+		set { }
+	}
+	public Vector2 globalCenter {
+		get { return globalRect.center; }
+	}
+
+	private Vector2[] GlobalCorners;
+	public Vector2[] globalCorners {
+		get {
+			CalculateAllCorners (Space.Global);
+			return GlobalCorners;
+		}
+	}
+
+	public AnimatorSystemRect (RectTransform rectTransform) {
+		this.rectTransform = rectTransform;
+		GlobalRect = new Rect ();
+		LocalRect = new Rect ();
+		GlobalCorners = new Vector2[8];
+		LocalCorners = new Vector2[8];
+	}
+
+	public void CalculateRect (Space space) {
+		Rect rect = (space == Space.Local) ? LocalRect : GlobalRect;
+
+		Vector2 rectSize = rectTransform.rect.size;
+		rectSize.x *= rectTransform.lossyScale.x;
+		rectSize.y *= rectTransform.lossyScale.y;
+
+		if (space == Space.Local) {
+			rect.size = rectSize;
+			rect.center = rectTransform.rect.center;
+		}
+		else {
+			rect.size = rectSize;
+			rect.center = rectTransform.rect.center + (Vector2) rectTransform.position;
+		}
+
+		CalculateAllCorners (space);
+	}
+
+	public void CalculateAllCorners (Space space) {
+		if (space == Space.Local) {
+			for (int i = 0; i < 8; i++)
+				LocalCorners[i] = GetCorner (i, space);
+		}
+		else {
+			for (int i = 0; i < 8; i++)
+				GlobalCorners[i] = GetCorner (i, space);
+		}
+	}
+
+	public Vector2 GetCorner (int cornerIndex, Space space) {
+		Rect rect = (space == Space.Local) ? LocalRect : GlobalRect;
+
+		switch (cornerIndex) {
+			case 0:
+				return new Vector2 (rect.xMin, rect.yMin);
+			case 1:
+				return new Vector2 (rect.xMin, rect.center.y);
+			case 2:
+				return new Vector2 (rect.xMin, rect.yMax);
+			case 3:
+				return new Vector2 (rect.center.x, rect.yMax);
+			case 4:
+				return new Vector2 (rect.xMax, rect.yMax);
+			case 5:
+				return new Vector2 (rect.xMax, rect.center.y);
+			case 6:
+				return new Vector2 (rect.xMax, rect.yMin);
+			case 7:
+				return new Vector2 (rect.center.x, rect.yMin);
+		}
+
+		return Vector2.zero;
+	}
 }
 
 [System.Serializable]
@@ -27,11 +137,11 @@ public class AnimatorItemSettings {
 
 	public GameObject go;
 	public RectTransform canvasRT;
-	public Vector3[] canvasRTBounds;
+	public AnimatorSystemRect canvasRect;
 	public RectTransform parentRT;
-	public Vector3[] parentRTBounds;
+	public AnimatorSystemRect parentRect;
 	public RectTransform rectTransform;
-	public Vector3[] rectTransformBounds;
+	public AnimatorSystemRect rectTransformRect;
 	public bool loop;
 	public float time;
 	public float delay;
@@ -58,6 +168,7 @@ public class AnimatorItemSettings {
 	public void SetUp (GameObject go) {
 		this.go = go;
 		canvasRT = go.GetComponentInParent<Canvas> ().GetComponent<RectTransform> ();
+		canvasRect.
 		CalculateCanvasBounds ();
 
 		parentRT = go.transform.parent.GetComponent<RectTransform> ();
@@ -69,8 +180,12 @@ public class AnimatorItemSettings {
 
 	private void CalculateCanvasBounds () {
 		Rect canvasRect = canvasRT.rect;
-		canvasRect.size *= canvasRT.localScale.x;
+		Vector3 rectSize = canvasRect.size;
+		rectSize.x *= canvasRT.lossyScale.x;
+		rectSize.y *= canvasRT.lossyScale.y;
+		canvasRect.size = rectSize;
 		canvasRect.center = Vector3.zero;
+
 		canvasRTBounds = new Vector3[8];
 		canvasRTBounds[0] = new Vector2 (canvasRect.xMin, canvasRect.yMin);
 		canvasRTBounds[1] = new Vector2 (canvasRect.xMin, canvasRect.center.y);
@@ -84,6 +199,12 @@ public class AnimatorItemSettings {
 
 	private void CalculateParentBounds () {
 		Rect parentRect = parentRT.rect;
+		Vector2 rectSize = parentRect.size;
+		rectSize.x *= parentRT.lossyScale.x;
+		rectSize.y *= parentRT.lossyScale.y;
+		parentRect.size = rectSize;
+		parentRect.center = Vector3.zero;
+
 		parentRTBounds = new Vector3[8];
 		parentRTBounds[0] = new Vector2 (parentRect.xMin, parentRect.yMin);
 		parentRTBounds[1] = new Vector2 (parentRect.xMin, parentRect.center.y);
@@ -98,10 +219,11 @@ public class AnimatorItemSettings {
 	private void CalculateRectTransformBounds () {
 		Rect rectTransformRect = rectTransform.rect;
 		Vector2 rectSize = rectTransformRect.size;
-		rectSize.x *= go.transform.lossyScale.x;
-		rectSize.y *= go.transform.lossyScale.y;
+		rectSize.x *= rectTransform.lossyScale.x;
+		rectSize.y *= rectTransform.lossyScale.y;
 		rectTransformRect.size = rectSize;
 		rectTransformRect.center = Vector3.zero;
+
 		rectTransformBounds = new Vector3[8];
 		rectTransformBounds[0] = new Vector2 (rectTransformRect.xMin, rectTransformRect.yMin);
 		rectTransformBounds[1] = new Vector2 (rectTransformRect.xMin, rectTransformRect.center.y);
@@ -124,7 +246,7 @@ public class AnimatorItemSettings {
 
 [System.Serializable]
 public class Movement : AnimatorItemSettings {
-	public AnimatorSysyemPositionMode moveMode;
+	public AnimatorSystemPositionMode moveMode;
 	public AnimatorSystemPosition moveFrom;
 	public Vector2 startPosition;
 	public Vector2 endPosition;
@@ -132,7 +254,7 @@ public class Movement : AnimatorItemSettings {
 	public void StartIn () {
 		CallStart ();
 
-		if (moveMode == AnimatorSysyemPositionMode.Canvas)
+		if (moveMode == AnimatorSystemPositionMode.Canvas)
 			rectTransform.position = GetCanvasEdgePosition (moveFrom);
 		else
 			rectTransform.localPosition = GetParentEdgePosition (moveFrom);
@@ -154,7 +276,7 @@ public class Movement : AnimatorItemSettings {
 			case AnimatorSystemPosition.Custom:
 				return -(Vector3) rectTransform.rect.center - (Vector3) startPosition;
 			case AnimatorSystemPosition.UpperLeft:
-				return parentRTBounds[2] - rectTransformBounds[6];
+				return parentRTBounds[2] /*- rectTransformBounds[6]*/;
 			case AnimatorSystemPosition.UpperCenter:
 				return parentRTBounds[3] - rectTransformBounds[7];
 			case AnimatorSystemPosition.UpperRight:
@@ -183,7 +305,7 @@ public class Movement : AnimatorItemSettings {
 				edgePosition = -(Vector3) rectTransform.rect.center + (Vector3) startPosition;
 				break;
 			case AnimatorSystemPosition.UpperLeft:
-				edgePosition = canvasRTBounds[2] - rectTransformBounds[6];
+				edgePosition = canvasRTBounds[2] /*- rectTransformBounds[6]*/;
 				break;
 			case AnimatorSystemPosition.UpperCenter:
 				edgePosition = canvasRTBounds[3] - rectTransformBounds[7];
@@ -264,11 +386,13 @@ public class AnimatorItem : MonoBehaviour {
 
 		for (int i = 0; i < 8; i++) {
 			Gizmos.color = Color.yellow;
+			Gizmos.DrawWireCube (movement.GetCanvasEdgePosition (movement.moveFrom), Vector2.one * size1 * 5);
 			Gizmos.DrawWireSphere (movement.canvasRTBounds[i], size1);
 		}
 
 		for (int i = 0; i < 8; i++) {
 			Gizmos.color = Color.red;
+			Gizmos.DrawWireCube (movement.GetParentEdgePosition (movement.moveFrom), Vector2.one * size1 * 5);
 			Gizmos.DrawWireSphere (movement.parentRTBounds[i], size2);
 		}
 
